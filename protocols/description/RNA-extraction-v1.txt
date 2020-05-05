@@ -1,0 +1,42 @@
+#Assumptioms/Limitations:
+
+1. I assume samples are already in a 96 deep welled plate.
+2. For this script, I am using an endless supply of tips (In real life, sadly, they are not), as we would need 10 tipracks for 96 samples.
+3. I am basing my volumes on a RNA extraction protocol that might not be the one we use
+4. Initial plate has 112ul
+
+#Labware:
+
+1. magnetic module with 96 deep wells plate in pos 7
+2. NEST 12 15 ml reservoir for Reagents in pos 5 (A1: Beads, A2: Wash WBE, A3: Ethanol 70%, A4:RNAse free water)
+3. NEST 12 15 ml reservoir for liquid waste in pos 11
+4. Output eppendorf 96 well plate in pos 4
+5. ∞-big 300ul tipracks in pos 1,2,3,6,9
+6. Multichannel P300 Generation 1
+
+#Step-by-Step:
+
+1. Add 144 ul of bead solution to each well and mix 5 times with 40 ul. [1 tip rack]
+2. Incubate for 5 min
+3. Incubate for 5 min more, this time with the magnet on
+4. With the magnet on, remove 256 ul of supernatant [1 tip rack]
+5. Add 280 ul of Wash WBE and mix 5 times with 70 ul. Incubate for 3 min [1 tip rack]
+6. With the magnet on, remove 280 ul of supernatant [1 tip rack]
+7. FIRST TIME: Add 280 ul of Ethanol 70% and mix 5 times with 70 ul. Incubate for 3 min [1 tip rack]
+8. FIRST TIME: With the magnet on, remove 280 ul of supernatant [1 tip rack]
+9. SECOND TIME: Add 280 ul of Ethanol 70% and mix 5 times with 70 ul. Incubate for 3 min [1 tip rack]
+10. SECOND TIME: With the magnet on, remove 280 ul of supernatant [1 tip rack]
+11. With magnet on, allow beads to dry for 5 min
+12. Turn off magnet and add 80 ul of RNAse free water
+13. Incubate with magnet for 1 min
+14. Transfer 80 ul from deep well to output eppendorf 96 well plate.
+
+#In detail behaviour:
+
+1. Whenever a tip touches a sample, I try to avoid hovering over any other wells. As such, when mixing/removing supernatant the first thing the robot does is move vertically to pos 10 and then from there it goes to the liquid waste/trash
+2. Before picking up any liquid, the pipette always aspires 20 ul of air. I copied this behaviour from a similar protocol Pedro showed me. I think is related to the filter, but I am not sure.
+3. Maximum capacity is 180 ul (Excluding the previous 20ul). If any transference is bigger than that, the robot does more than one trip and pours the liquid from the top of the well, to avoid contamining it and spreading during the trips.
+4. For mixing, the pipette takes liquid from the bottom, and pours it from a relative height of 6 mm from the bottom
+5. When removing supernatant, aspiration rate is reduced to 20 ul/sec (50 ul/sec in other situations)
+6. When removing supernatant, the robot moves the pipette slightly off-center in the X-axis to stay away from the pellet.
+
