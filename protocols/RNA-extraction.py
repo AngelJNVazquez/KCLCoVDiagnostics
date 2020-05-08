@@ -5,7 +5,7 @@ metadata =  {
     "protocolName": "RNA extraction protocol",
     "author": "Angel Menendez Vazquez <angel.menendez_vazquez@kcl.ac.uk>",
     "description": "Protocol for RNA extraction on 48 samples based on a SOP for 'Viral RNA Extraction with Beckman RNAdvance' and this script https://github.com/Opentrons/covid19/blob/master/protocols/OMI_Clinical/StationB_Zymo_20200407/StationB-48samples-Zymo-20200407.py",
-    "apiLevel": "2.2"
+    "apiLevel": "2.3"
 }
 
 def run(protocol: protocol_api.ProtocolContext):
@@ -58,7 +58,7 @@ def run(protocol: protocol_api.ProtocolContext):
     p300.flow_rate.blow_out = 300
     magnetHeight= 12.7 #In mm. We tested this height. Heights over this, move the Zymo plate upwards, maybe because the magnetic module was not level.
     topOffset = -5 # I use this to make sure the tip stays inside the well, to avoid it spilling out while dispensing
-    tipVolume = 200 # ul
+    tipVolume = 180 # ul
         #Transference volumes - ul
     originalVol = 140
     proteinaseVol= 112
@@ -117,7 +117,7 @@ def run(protocol: protocol_api.ProtocolContext):
         p300.flow_rate.aspirate = 50
 
     def slow_transfer(vol, src, to):
-        """Similar to remove_supernatant, but the other way around. It transfers from point A to point B in 200ul trips and pours liquid
+        """Similar to remove_supernatant, but the other way around. It transfers from point A to point B in tipVol ul trips and pours liquid
         from the top, to avoid contaminating the tip while transfering all the necessary volume"""
         tvol = vol
         while tvol > tipVolume:
