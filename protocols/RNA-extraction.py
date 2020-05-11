@@ -5,7 +5,7 @@ metadata =  {
     "protocolName": "RNA extraction protocol",
     "author": "Angel Menendez Vazquez <angel.menendez_vazquez@kcl.ac.uk>",
     "description": "Protocol for RNA extraction on 48 samples based on a SOP for 'Viral RNA Extraction with Beckman RNAdvance' and this script https://github.com/Opentrons/covid19/blob/master/protocols/OMI_Clinical/StationB_Zymo_20200407/StationB-48samples-Zymo-20200407.py",
-    "apiLevel": "2.2"
+    "apiLevel": "2.3"
 }
 
 def run(protocol: protocol_api.ProtocolContext):
