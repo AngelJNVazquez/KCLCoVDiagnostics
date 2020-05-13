@@ -150,7 +150,7 @@ def run(protocol: protocol_api.ProtocolContext):
             retrieve_tip(currentip)
             if (mixReagent==True):
                 protocol.comment("Mixing magnetic beads")
-                well_mix(loc=beads, vol=beadsMixing, reps=mixRepeats, height=beadsHeight)
+                well_mix(loc=beads, vol=beadsMixing, reps=mixRepeats, height=10)
                 p300.blow_out(beads.top())
                 mixReagent=False
             slow_transfer(vol=vol, src=reagent, to=deepPlate[ID])
@@ -161,7 +161,7 @@ def run(protocol: protocol_api.ProtocolContext):
             protocol.comment("Engaging magnet")
             magneto.engage(height=magnetHeight)
         protocol.comment("Incubating for %s minutes" % incubationTime)
-        protocol.delay(minutes=incubationTime)
+        protocol.delay(seconds=2)
 
     ##############################################################################################
     # C O M M A N D S || Hello, actual protocol!
@@ -183,7 +183,7 @@ def run(protocol: protocol_api.ProtocolContext):
     #INCUBATION 2: 5 min without magnet [Total: 15 min]
     protocol.comment("Engaging magnet and keeping this incubation going for other %s minutes" % incubationBeadsMagnet)
     magneto.engage(height=magnetHeight)
-    protocol.delay(minutes=5)
+    protocol.delay(seconds=2)
     #INCUBATION 3: 5 min incubation with magnet [Total: 20 min]
 
 
@@ -229,7 +229,7 @@ def run(protocol: protocol_api.ProtocolContext):
 
         #INCUBATION 7: 5 min incubaton with magnet [Total: 31 min]
     protocol.comment("This time, I do not disengage the magnet and let the beads dry for 5 min")
-    protocol.delay(minutes=5)
+    protocol.delay(seconds=2)
 
         #STEP 10: Diluting samples in 80 ul of RNAse free water
     protocol.comment("Disengaging magnet")

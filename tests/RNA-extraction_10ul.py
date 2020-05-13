@@ -4,7 +4,7 @@ import json
 metadata =  {
     "protocolName": "RNA extraction protocol",
     "author": "Angel Menendez Vazquez <angel.menendez_vazquez@kcl.ac.uk>",
-    "description": "Protocol for RNA extraction on 48 samples based on a SOP for 'Viral RNA Extraction with Beckman RNAdvance' and this script https://github.com/Opentrons/covid19/blob/master/protocols/OMI_Clinical/StationB_Zymo_20200407/StationB-48samples-Zymo-20200407.py",
+    "description": "I hate my life and I hate computers",
     "apiLevel": "2.3"
 }
 
@@ -21,7 +21,7 @@ def run(protocol: protocol_api.ProtocolContext):
         #Plates
     reagents = protocol.load_labware("nest_12_reservoir_15ml", 5, label="Reagents reservoir")
     waste = protocol.load_labware("nest_12_reservoir_15ml", 9, label="Liquid waste reservoir")
-    deepPlate = magneto.load_labware("zymoresearch_96_deepwell_2400ul", label = "Deep well")
+    deepPlate = magneto.load_labware("usascientific_96_wellplate_2.4ml_deep", label = "Deep well")
     outplate = protocol.load_labware("eppendorf96_skirted_150ul", 3, label = "Output plate")
         #Tips - Ordered in the way they are taken
     tiprack2 = protocol.load_labware("opentrons_96_tiprack_300ul", 2)
@@ -37,7 +37,7 @@ def run(protocol: protocol_api.ProtocolContext):
         for i in range(1,13):
             availableTips.append(rack["A"+str(i)]) #Now, if I use availableTips.pop(), I dont have to assign a million variables to each tip.
         #Pipettes
-    p300 = protocol.load_instrument( "p300_multi", "left")
+    p300 = protocol.load_instrument( "p10_multi", "right")
 
         #Assigning relevant labware elements to variables to make it easier to understand.
     proteinase = reagents["A1"]
@@ -56,26 +56,26 @@ def run(protocol: protocol_api.ProtocolContext):
     p300.flow_rate.aspirate = 50 #Flow rate in ul / second
     p300.flow_rate.dispense = 150
     p300.flow_rate.blow_out = 300
-    magnetHeight= 12.5 #In mm. We tested this height. Heights over this, move the Zymo plate upwards, maybe because the magnetic module was not level.
+    magnetHeight= 12.7 #In mm. We tested this height. Heights over this, move the Zymo plate upwards, maybe because the magnetic module was not level.
     topOffset = -5 # I use this to make sure the tip stays inside the well, to avoid it spilling out while dispensing
-    tipVolume = 180 # ul
+    tipVolume = 10 # ul
         #Transference volumes - ul
-    originalVol = 140
-    proteinaseVol= 112
-    beadsVol= 144
+    originalVol = 1
+    proteinaseVol= 1
+    beadsVol= 1
     initialSupernatant = originalVol + proteinaseVol + beadsVol
-    washVol= 280
-    dilutionVol= 80
+    washVol= 1
+    dilutionVol= 1
         #Mixing volumes - In ul
-    washMixing=100
-    beadsMixing=200
+    washMixing=1
+    beadsMixing=1
     beadsHeight=30
     mixRepeats=5
         #Incubation times - Minutes
-    incubationProteinase = 1#10
-    incubationBeadsNoMagnet = 1#5
-    incubationBeadsMagnet = 1#5
-    incubationWash = 1#3
+    incubationProteinase = 10
+    incubationBeadsNoMagnet = 5
+    incubationBeadsMagnet = 5
+    incubationWash = 3
     incubationWater = 1
 
     # izda= True # Deprecated. I used this to code the pipette offset when removing supernatant to move away of pellet. Unnecesary now, cause whe dont use whole plate.
