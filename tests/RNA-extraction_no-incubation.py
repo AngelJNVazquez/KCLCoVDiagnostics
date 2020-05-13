@@ -4,7 +4,7 @@ import json
 metadata =  {
     "protocolName": "RNA extraction protocol",
     "author": "Angel Menendez Vazquez <angel.menendez_vazquez@kcl.ac.uk>",
-    "description": "I hate my life and I hate computers",
+    "description": "Protocol for RNA extraction on 48 samples based on a SOP for 'Viral RNA Extraction with Beckman RNAdvance' and this script https://github.com/Opentrons/covid19/blob/master/protocols/OMI_Clinical/StationB_Zymo_20200407/StationB-48samples-Zymo-20200407.py",
     "apiLevel": "2.3"
 }
 
@@ -16,12 +16,18 @@ def run(protocol: protocol_api.ProtocolContext):
     # 4     5       6
     # 1     2       3
 
-        #Modules
+        #Modules, plate and relevant variables
     magneto = protocol.load_module("magdeck", 6)
+    deepPlate = magneto.load_labware("zymoresearch_96_deepwell_2.4ml", label = "Deep well")
+    magnetHeight= 12.5
+    ##Chosen heights for GEN1 magnet:
+    #Zymoresearch - "zymoresearch_96_deepwell_2400ul" - 12.5mm
+    #Eppendorf - "eppendorf_96_deepwell_2ml" - 11.8 mm
+    #Starlab - "usascientific_96_wellplate_2.4ml_deep" - E2896-1810 11.4mm
+    #Macherey-Nagel - - 10mm
         #Plates
     reagents = protocol.load_labware("nest_12_reservoir_15ml", 5, label="Reagents reservoir")
     waste = protocol.load_labware("nest_12_reservoir_15ml", 9, label="Liquid waste reservoir")
-    deepPlate = magneto.load_labware("usascientific_96_wellplate_2.4ml_deep", label = "Deep well")
     outplate = protocol.load_labware("eppendorf96_skirted_150ul", 3, label = "Output plate")
         #Tips - Ordered in the way they are taken
     tiprack2 = protocol.load_labware("opentrons_96_tiprack_300ul", 2)
@@ -35,43 +41,46 @@ def run(protocol: protocol_api.ProtocolContext):
     availableTips = []
     for rack in tipracks:
         for i in range(1,13):
-            availableTips.append(rack["A"+str(i)]) #Now, if I use availableTips.pop(), I dont have to assign a million variables to each tip.
+            availableTips.append(rack["A"+str(i)]) #To take a tip, just use availableTips.pop() and voila! Only unexpected behavour is that it will take tips from right to left.
         #Pipettes
-    p300 = protocol.load_instrument( "p10_multi", "right")
+    p300 = protocol.load_instrument( "p300_multi", "left")
 
-        #Assigning relevant labware elements to variables to make it easier to understand.
-    proteinase = reagents["A1"]
-    beads = reagents["A2"]
-    WBE = reagents["A3"]
-    ethanol = reagents["A4"]
-    water = reagents["A5"]
+        ###Assigning relevant labware elements to variables to make it easier to understand.
+    #Exact volume/sample (ul) + volume to keep a 0.5mm high pool (WxLxH=8.20x71.20x0.5 = 292 ul)
+    proteinase = reagents["A1"] # (896 * Columns) + 292 ul
+    beads = reagents["A2"] # (1152 * Columns) + 292 ul
+    WBE = reagents["A3"] # (2240 * Columns) + 292 ul
+    ethanol1 = reagents["A4"] # (2240 * Columns) + 292 ul
+    ethanol2 = reagents["A5"] # (2240 * Columns) + 292 ul
+    water = reagents["A6"] # (640 * Columns) + 292 ul
 
     columnID = ["A"+str(i) for i in range(1,12,2)] # Making it easier to access the column we will use.
 
     #General variables
-        #Run variables
+        #NUMBER OF COLUMNS
     runColumns=1 # Range 1-6. Samples should be a multiple of 8, or you will waste reagents.
     columnID = columnID[:runColumns]
-        #Robot variables
-    p300.flow_rate.aspirate = 50 #Flow rate in ul / second
+        #Robot variables - Flow rate in ul / second
+    p300.flow_rate.aspirate = 50
     p300.flow_rate.dispense = 150
     p300.flow_rate.blow_out = 300
-    magnetHeight= 12.7 #In mm. We tested this height. Heights over this, move the Zymo plate upwards, maybe because the magnetic module was not level.
     topOffset = -5 # I use this to make sure the tip stays inside the well, to avoid it spilling out while dispensing
-    tipVolume = 10 # ul
+    tipVolume = 180 # max volume to be transported in a single trip
         #Transference volumes - ul
-    originalVol = 1
-    proteinaseVol= 1
-    beadsVol= 1
+    originalVol = 140 #This is not used for transfers, it is here mostly to make volumes clearer to understand
+    proteinaseVol= 112
+    beadsVol= 144
     initialSupernatant = originalVol + proteinaseVol + beadsVol
-    washVol= 1
-    dilutionVol= 1
-        #Mixing volumes - In ul
-    washMixing=1
-    beadsMixing=1
-    beadsHeight=30
+    washVol= 280
+    dilutionVol= 80
+        #Mixing settings
+    washMixing=100 # volume (ul)
+    beadsMixing=200 # volume (ul)
+    waterMixing=30 # volume (ul)
+    generalHeight=6 # From well bottom (mm)
+    beadsHeight=10 # From well bottom (mm)
     mixRepeats=5
-        #Incubation times - Minutes
+        #Incubation times - Seconds
     incubationProteinase = 10
     incubationBeadsNoMagnet = 5
     incubationBeadsMagnet = 5
@@ -90,8 +99,8 @@ def run(protocol: protocol_api.ProtocolContext):
         p300.pick_up_tip(tip)
         p300.aspirate(20)
 
-    def well_mix(loc, vol, reps, height=5.5):
-        """Aspirates <vol> from bottom of well and dispenses it from 5.5 mm of height <reps> times"""
+    def well_mix(loc, vol, reps, height=generalHeight):
+        """Aspirates <vol> from bottom of well and dispenses it from <height> <reps> times"""
         loc1 = loc.bottom().move(types.Point(x=0, y=0, z=0.6))
         loc2 = loc.bottom().move(types.Point(x=0, y=0, z=height))
         for _ in range(reps-1):
@@ -100,7 +109,7 @@ def run(protocol: protocol_api.ProtocolContext):
         p300.dispense(20, loc.top(topOffset))
 
     def remove_supernatant(src, vol, dump, izda=True):
-        """While <vol> is bigger than 180ul, it divides it in 180ul trips.
+        """While <vol> is bigger than <tipVolume>, it divides it in <tipVolume> trips.
         Flow rate is in ul/second
         Positive X means to move to the right. With the wells we use (Column 1,3,5,7,9 and 11) pellet is placed to the right, so we use a small offset to the left"""
         p300.flow_rate.aspirate = 20
@@ -117,7 +126,7 @@ def run(protocol: protocol_api.ProtocolContext):
         p300.flow_rate.aspirate = 50
 
     def slow_transfer(vol, src, to):
-        """Similar to remove_supernatant, but the other way around. It transfers from point A to point B in 200ul trips and pours liquid
+        """Similar to remove_supernatant, but the other way around. It transfers from point A to point B in tipVol ul trips and pours liquid
         from the top, to avoid contaminating the tip while transfering all the necessary volume"""
         tvol = vol
         while tvol > tipVolume:
@@ -131,7 +140,7 @@ def run(protocol: protocol_api.ProtocolContext):
         protocol.delay(seconds=2)
         p300.dispense(20)
 
-    #These next functions are more specific.
+    #These next functions are more specific. Combinations of the previous ones.
 
     def removing_step(vol, wasteID, columnID, reagentName="Something"):
         """There are 4 steps of supernatant removal which are pretty much similar"""
@@ -160,14 +169,15 @@ def run(protocol: protocol_api.ProtocolContext):
         if magnetTime==True:
             protocol.comment("Engaging magnet")
             magneto.engage(height=magnetHeight)
-        protocol.comment("Incubating for %s minutes" % incubationTime)
-        protocol.delay(minutes=incubationTime)
+        protocol.comment("Incubating for %s seconds" % incubationTime)
+        protocol.delay(seconds=incubationTime)
 
     ##############################################################################################
     # C O M M A N D S || Hello, actual protocol!
 
         #STEP 1: Add Proteinase K/LBF. I don't use the adding_step function here because there are slight variations which I don't want to add to the function
 
+    magneto.disengage() #In case it is engaged from previous protocols.
     protocol.comment("We are working with column IDs: %s" % columnID)
     protocol.comment("\n\nSamples should have an initual volume of 140ul")
     adding_step(vol= proteinaseVol, reagent=proteinase, reagentName="Proteinase K/LBF", incubationTime=incubationProteinase,
@@ -177,13 +187,12 @@ def run(protocol: protocol_api.ProtocolContext):
 
         #STEP 2: mix magnetic beads, add them to samples and mix sample well. No adding_step function for the same reasons as before.
     protocol.comment("\n\nEnough incubation, time to do s t u f f")
-    iteration = 0
     adding_step(vol=beadsVol, reagent=beads, reagentName="Magnetic beads", incubationTime=incubationBeadsNoMagnet,
     columnID=columnID, mixReagent=True, magnetTime=False)
     #INCUBATION 2: 5 min without magnet [Total: 15 min]
-    protocol.comment("Engaging magnet and keeping this incubation going for other %s minutes" % incubationBeadsMagnet)
+    protocol.comment("Engaging magnet and keeping this incubation going for other %s seconds" % incubationBeadsMagnet)
     magneto.engage(height=magnetHeight)
-    protocol.delay(minutes=5)
+    protocol.delay(seconds=incubationBeadsMagnet)
     #INCUBATION 3: 5 min incubation with magnet [Total: 20 min]
 
 
@@ -206,7 +215,7 @@ def run(protocol: protocol_api.ProtocolContext):
     magneto.disengage()
 
         #STEP 6: First wash with Eth, tips_transfer)anol
-    adding_step(vol= washVol, reagent=ethanol, reagentName="Ethanol 70% (First time)", incubationTime=incubationWash,
+    adding_step(vol= washVol, reagent=ethanol1, reagentName="Ethanol 70% (First time)", incubationTime=incubationWash,
     columnID=columnID)
         #INCUBATION 5: 3 min incubaton with magnet [Total: 26 min]
 
@@ -218,7 +227,7 @@ def run(protocol: protocol_api.ProtocolContext):
     magneto.disengage()
 
         #STEP 8: Second wash with Ethanol
-    adding_step(vol= washVol, reagent=ethanol, reagentName="Ethanol 70% (Second time)", incubationTime=incubationWash,
+    adding_step(vol= washVol, reagent=ethanol2, reagentName="Ethanol 70% (Second time)", incubationTime=incubationWash,
     columnID=columnID)
         #INCUBATION 6: 3 min incubaton with magnet [Total: 26 min]
 
@@ -229,23 +238,23 @@ def run(protocol: protocol_api.ProtocolContext):
 
         #INCUBATION 7: 5 min incubaton with magnet [Total: 31 min]
     protocol.comment("This time, I do not disengage the magnet and let the beads dry for 5 min")
-    protocol.delay(minutes=5)
+    protocol.delay(seconds=incubationBeadsMagnet)
 
         #STEP 10: Diluting samples in 80 ul of RNAse free water
     protocol.comment("Disengaging magnet")
     magneto.disengage()
     protocol.comment("Diluting samples in %s ul of RNAse free water" % dilutionVol)
     adding_step(vol= dilutionVol, reagent=water, reagentName="RNAse-free water",incubationTime=incubationWater,
-    columnID=columnID, mixVol=30)
+    columnID=columnID, mixVol=waterMixing)
         #INCUBATION 7: 1 min incubaton with magnet [Total: 32 min]
 
         #STEP 11: Transfering samples to output eppendorf 96 well plate
-    protocol.comment("Transfering DNA to output plate")
-    magneto.disengage()
+    protocol.comment("Transfering DNA to output plate with magnet still engaged")
     for index, ID in enumerate(columnID):
         currentip = availableTips.pop()
         retrieve_tip(currentip)
         slow_transfer(dilutionVol, deepPlate[ID], outplate[ID])
         remove_tip(currentip)
 
+    magneto.disengage()
     protocol.comment("\n\nFecho!")

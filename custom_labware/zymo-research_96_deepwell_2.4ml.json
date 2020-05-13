@@ -1123,7 +1123,7 @@
         "isTiprack": false,
         "isMagneticModuleCompatible": true,
 		"magneticModuleEngageHeight": 14.94,
-        "loadName": "zymoresearch_96_deepwell_2400ul"
+        "loadName": "zymoresearch_96_deepwell_2.4ml"
     },
     "namespace": "custom_beta",
     "version": 1,
