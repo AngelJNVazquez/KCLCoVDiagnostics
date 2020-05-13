@@ -20,7 +20,7 @@ def run(protocol: protocol_api.ProtocolContext):
     #Mackerey Nagel 10mm
     tiprack2 = protocol.load_labware("opentrons_96_tiprack_300ul", 2)
         #Pippetes
-    p300 = protocol.load_instrument( "p300_multi", "left", tip_racks=[tiprack2])
+    p300 = protocol.load_instrument( "p300_multi", "right", tip_racks=[tiprack2])
 
         #variables
     Height1=12.7
