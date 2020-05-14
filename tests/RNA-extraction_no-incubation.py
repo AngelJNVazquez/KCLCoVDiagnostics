@@ -16,15 +16,18 @@ def run(protocol: protocol_api.ProtocolContext):
     # 4     5       6
     # 1     2       3
 
-        #Modules, plate and relevant variables
+        #Modules, plate and magnet height
     magneto = protocol.load_module("magdeck", 6)
     deepPlate = magneto.load_labware("zymoresearch_96_deepwell_2.4ml", label = "Deep well")
     magnetHeight= 12.5
-    ##Chosen heights for GEN1 magnet:
-    #Zymoresearch - "zymoresearch_96_deepwell_2400ul" - 12.5mm
-    #Eppendorf - "eppendorf_96_deepwell_2ml" - 11.8 mm
-    #Starlab - "usascientific_96_wellplate_2.4ml_deep" - E2896-1810 11.4mm
-    #Macherey-Nagel - - 10mm
+    ##################################################################################################
+    ##  We have manually tested appropriate height for different plates, these are the chosen ones  ##
+    ##                                                                                              ##
+    ##  Zymoresearch - "zymoresearch_96_deepwell_2400ul" - 12.5mm                                   ##
+    ##  Eppendorf - "eppendorf_96_deepwell_2ml" - 11.8 mm                                           ##
+    ##  Starlab - "usascientific_96_wellplate_2.4ml_deep" - E2896-1810 11.4mm                       ##
+    ##  Macherey-Nagel - - 10mm                                                                     ##
+    ##################################################################################################
         #Plates
     reagents = protocol.load_labware("nest_12_reservoir_15ml", 5, label="Reagents reservoir")
     waste = protocol.load_labware("nest_12_reservoir_15ml", 9, label="Liquid waste reservoir")
