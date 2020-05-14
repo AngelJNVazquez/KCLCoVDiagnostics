@@ -11,9 +11,9 @@ metadata =  {
 def run(protocol: protocol_api.ProtocolContext):
 
     ################### SETTING UP ###################
-    ##                                    ##
-    ##     ヽ༼ຈل͜ຈ༽ﾉ LABWARE ヽ༼ຈل͜ຈ༽ﾉ     ##
-    ##                                    ##
+    ##                                              ##
+    ##     ヽ༼ຈل͜ຈ༽ﾉ LABWARE ヽ༼ຈل͜ຈ༽ﾉ               ##
+    ##                                              ##
     ##################################################
 
                 # Positions are:
@@ -61,9 +61,9 @@ def run(protocol: protocol_api.ProtocolContext):
     p300 = protocol.load_instrument( "p300_multi", "left")
 
     ################### SETTING UP ###################
-    ##                                    ##
-    ## ヽ༼ຈل͜ຈ༽ﾉ BASIC VARIABLES ヽ༼ຈل͜ຈ༽ﾉ ##
-    ##                                    ##
+    ##                                              ##
+    ## ヽ༼ຈل͜ຈ༽ﾉ BASIC VARIABLES ヽ༼ຈل͜ຈ༽ﾉ           ##
+    ##                                              ##
     ##################################################
 
         #RUN SETTINGS
@@ -114,9 +114,9 @@ def run(protocol: protocol_api.ProtocolContext):
     #########################################################################################################
 
     ################### SETTING UP ###################
-    ##                                    ##
-    ## ヽ༼ຈل͜ຈ༽ﾉ ADVANCED VARIABLES ヽ༼ຈل͜ຈ༽ﾉ ##
-    ##                                    ##
+    ##                                              ##
+    ## ヽ༼ຈل͜ຈ༽ﾉ ADVANCED VARIABLES ヽ༼ຈل͜ຈ༽ﾉ        ##
+    ##                                              ##
     ##################################################
 
         #Column accesion list - As we wont work in all physically available columns, this list makes it easier to manage
