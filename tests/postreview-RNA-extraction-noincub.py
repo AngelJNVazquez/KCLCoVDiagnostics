@@ -78,12 +78,12 @@ def run(protocol: protocol_api.ProtocolContext):
     generalHeight=5 # Used always except when mixing beads in reservoir - Beads are extracted from From well bottom (mm)
     beadsHeight=10 # Used when mixing beads in reservoir - From well bottom (mm). When mixing beads in the reagent well - Maybe I should modify this and make it depend on runColumns
 
-        #Incubation times - Minutes
+        #Incubation times - seconds
     incubationProteinase = 10
     incubationBeadsNoMagnet = 5 # After adding the beads, we incubate them for 5 min without magnet.
     incubationBeadsMagnet = 5
     incubationWash = 3
-    incubationDry = 10 # After removing final wash, the beads are left to dry for a while.
+    incubationDry = 5 # After removing final wash, the beads are left to dry for a while.
     incubationWater = 5 # After mixing. No magnet.
     incubationWaterMagnet = 1 # After incubationWater.
 
@@ -101,7 +101,7 @@ def run(protocol: protocol_api.ProtocolContext):
     WBE = reagents["A3"]
     ethanol1 = reagents["A4"]
     ethanol2 = reagents["A5"]
-    water = reagents["A12"]
+    water = reagents["A6"]
     #########################################################################################################
     ##           Use these formulae to identify how much volume you need based on number of columns        ##
     ##           Each reservoir well has dimensions W=8.20, L=127.76, H=31.40. To make sure there is       ##
@@ -112,7 +112,7 @@ def run(protocol: protocol_api.ProtocolContext):
     ##  WBE = (2240 * Columns) + 292 ul                                                                    ##
     ##  Ethanol1 = (2240 * Columns) + 292 ul                                                               ##
     ##  Ethanol2 = (2240 * Columns) + 292 ul                                                               ##
-    ##  Water = (640 * Columns) + 292 ul                                                                   ##
+    ##  Water = (400 * Columns) + 292 ul                                                                   ##
     #########################################################################################################
 
     ################### SETTING UP ###################
@@ -153,8 +153,8 @@ def run(protocol: protocol_api.ProtocolContext):
         This function takes the duration of the incubation and outputs a message every minute to keep track of the time more easily
         """
         while time > 0:
-            protocol.comment("Only %s minutes more! Hold in there!" % time)
-            protocol.delay(minutes=1)
+            protocol.comment("Only %s seconds more! Hold in there!" % time)
+            protocol.delay(seconds=1)
             time -= 1
 
     def remove_tip(pipette, tip):
@@ -169,6 +169,7 @@ def run(protocol: protocol_api.ProtocolContext):
         Originally, the robot took a tip, went to the top of the well it was going to work with, and aspired 20 ul there, but now we are making it aspire 20 ul after taking the tip
         """
         pipette.pick_up_tip(tip)
+        pipette.aspirate(20)
 
     def well_mix(vol, loc, reps, height=generalHeight, moveSide=0):
         """
@@ -177,14 +178,12 @@ def run(protocol: protocol_api.ProtocolContext):
         loc2 is a position in the same x and y posiiton than loc1, but at <height>mm over the bottom of the well
         The idea here is to take liquid to the very bottom and pour it from a higher point, to mix things
         """
-        p300.flow_rate.aspirate = 100
-        loc1 = loc.bottom().move(types.Point(x=0+moveSide, y=0, z=0.3))
+        loc1 = loc.bottom().move(types.Point(x=0+moveSide, y=0, z=0.6))
         loc2 = loc.bottom().move(types.Point(x=0+moveSide, y=0, z=height))
         for _ in range(reps):
             p300.aspirate(vol, loc1)
             p300.dispense(vol, loc2)
         p300.dispense(20, loc.top(topOffset))
-        p300.flow_rate.aspirate = 50
 
     def remove_supernatant(vol, columnID, wasteID, reagentName="Something", pipette=p300):
         """
@@ -202,12 +201,12 @@ def run(protocol: protocol_api.ProtocolContext):
             tvol = vol
             while tvol > tipVolume:
                 p300.dispense(20, src.top(topOffset) )
-                p300.transfer(tipVolume, src.bottom().move(types.Point(x=-1, y=0, z=0.2)), dump.top(topOffset), new_tip="never") #Slightly to the left
+                p300.transfer(tipVolume, src.bottom().move(types.Point(x=-1, y=0, z=0.5)), dump.top(topOffset), new_tip="never") #Slightly to the left
                 protocol.delay(seconds=2) #In case something is TheOppositeOfDense and just drips down
-                p300.dispense(20) #Make sure we expel everything that must be expelled. We dont want to move droplets around.
+                p300.blow_out() #Make sure we expel everything that must be expelled. We dont want to move droplets around.
                 tvol -= tipVolume
             p300.dispense(20, src.top(topOffset) )
-            p300.transfer(tvol, src.bottom().move(types.Point(x=-1, y=0, z=0.2)), dump.top(topOffset), new_tip="never")
+            p300.transfer(tvol, src.bottom().move(types.Point(x=-1, y=0, z=0.5)), dump.top(topOffset), new_tip="never")
             protocol.delay(seconds=2)
             remove_tip(pipette, currentip)
         p300.flow_rate.aspirate = 50
@@ -217,7 +216,7 @@ def run(protocol: protocol_api.ProtocolContext):
     mixVol=washMixing, repeats=mixRepeats,
     mixReagent=False,
     magnetTime=True, incubationTime = incubationWash,
-    moveSide=2, extraVol=0, pipette=p300):
+    moveSide=0, extraVol=0, pipette=p300):
         """
         Similar to remove_supernatant, but the other way around. It transfers from point A to point B in <tipVol> ul trips and pours liquid
         from the top, to avoid contaminating the tip while transfering all the necessary volume.
@@ -236,22 +235,23 @@ def run(protocol: protocol_api.ProtocolContext):
             tvol = vol
             while tvol > tipVolume:
                 p300.dispense(20, src.top() )
-                p300.transfer(tipVolume, src.bottom().move(types.Point(x=0, y=0, z=0.3)),
+                p300.transfer(tipVolume, src.bottom().move(types.Point(x=0, y=0, z=0.5)),
                 to.top(topOffset), new_tip="never", air_gap=extraVol)
                 protocol.delay(seconds=2)
                 p300.blow_out()
                 tvol -= tipVolume
             p300.dispense(20, src.top() )
-            p300.transfer(tvol,src.bottom().move(types.Point(x=0, y=0, z=0.3)),
-            to.center(), new_tip="never", air_gap=extraVol)
+            p300.transfer(tvol,src.bottom().move(types.Point(x=0, y=0, z=0.5)),
+            to.top(topOffset), new_tip="never", air_gap=extraVol)
             protocol.delay(seconds=2)
+            p300.dispense(20)
             well_mix(vol=mixVol, loc=to, reps=repeats, moveSide=moveSide)
             remove_tip(pipette, currentip)
         #Incubation
         if magnetTime==True:
             protocol.comment("Engaging magnet")
             magneto.engage(height=magnetHeight)
-        protocol.comment("Incubating for %s minutes" % incubationTime)
+        protocol.comment("Incubating for %s seconds" % incubationTime)
         clock(time=incubationTime)
 
     ################# GO, VASILY, GO #################
@@ -274,7 +274,7 @@ def run(protocol: protocol_api.ProtocolContext):
     slow_transfer(vol=beadsVol, reagent=beads, reagentName="Magnetic beads", incubationTime=incubationBeadsNoMagnet,
     columnID=columnID, mixReagent=True, magnetTime=False, extraVol=10)
     #INCUBATION 2: 5 min without magnet [Total: 15 min]
-    protocol.comment("Engaging magnet and keeping this incubation going for other %s minutes" % incubationBeadsMagnet)
+    protocol.comment("Engaging magnet and keeping this incubation going for other %s seconds" % incubationBeadsMagnet)
     magneto.engage(height=magnetHeight)
     clock(time=incubationBeadsMagnet)
     #INCUBATION 3: 5 min incubation with magnet [Total: 20 min]
@@ -317,7 +317,7 @@ def run(protocol: protocol_api.ProtocolContext):
     remove_supernatant(vol=washVol, wasteID="A4", reagentName="Ethanol 70% (Second time)",
     columnID=columnID)
         #INCUBATION 7: 5 min incubaton with magnet [Total: 31 min]
-    protocol.comment("This time, I do not disengage the magnet and let the beads dry for %s min" % incubationDry)
+    protocol.comment("This time, I do not disengage the magnet and let the beads dry for 5 min")
     clock(time=incubationDry)
 
         #STEP 10: Diluting samples in 80 ul of RNAse free water
@@ -326,11 +326,11 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.comment("Diluting samples in %s ul of RNAse free water" % dilutionVol)
     slow_transfer(vol= dilutionVol, reagent=water, reagentName="RNAse-free water",
     incubationTime=incubationWater, columnID=columnID, mixVol=waterMixing,
-    magnetTime=False, repeats=waterMixRepeats) #Moving tip on top of pellet
+    magnetTime=False, repeats=waterMixRepeats, moveSide=1) #Moving tip on top of pellet
         #INCUBATION 8: 5 min incubaton WITHOUT magnet [Total: 36 min]
     protocol.comment("Engaging magnet now!")
     magneto.engage(height=magnetHeight)
-    protocol.delay(minutes=incubationWaterMagnet)
+    protocol.delay(seconds=incubationWaterMagnet)
         #INCUBATION 9: 1 min incubaton WITH magnet [Total: 37 min]
 
         #STEP 11: Transfering samples to output plate
@@ -342,8 +342,8 @@ def run(protocol: protocol_api.ProtocolContext):
         to = outplate[ID]
 
         p300.dispense(20, src.top() )
-        p300.transfer(dilutionVol, src.bottom().move(types.Point(x=-1, y=0, z=0.3)),
-        to.bottom(0.3), new_tip="never")
+        p300.transfer(dilutionVol, src.bottom().move(types.Point(x=-1, y=0, z=0.5)),
+        to.bottom(-3), new_tip="never")
         protocol.delay(seconds=2)
         p300.dispense(20)
         remove_tip(p300, currentip)

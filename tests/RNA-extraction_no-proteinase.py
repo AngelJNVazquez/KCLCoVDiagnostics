@@ -264,11 +264,6 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.comment("We are working with column IDs: %s" % columnID)
     protocol.comment("\n\nSamples should have an initial volume of 140ul")
 
-        #STEP 1: Add Proteinase K/LBF.
-    slow_transfer(vol= proteinaseVol, reagent=proteinase, reagentName="Proteinase K/LBF", incubationTime=incubationProteinase,
-    columnID=columnID, magnetTime=False)
-    #INCUBATION 1: 10 min [Total: 10 min]
-
         #STEP 2: mix magnetic beads, add them to samples and mix sample well. No slow_transfer function for the same reasons as before.
     protocol.comment("\n\nEnough incubation, time to do s t u f f")
     slow_transfer(vol=beadsVol, reagent=beads, reagentName="Magnetic beads", incubationTime=incubationBeadsNoMagnet,

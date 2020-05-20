@@ -40,12 +40,12 @@ def run(protocol: protocol_api.ProtocolContext):
     waste = protocol.load_labware("nest_12_reservoir_15ml", 9, label="Liquid waste reservoir")
     outplate = protocol.load_labware("eppendorf96_skirted_150ul", 3, label = "Output plate")
         #Tips - Ordered in the way they are used
-    tiprack2 = protocol.load_labware("opentrons_96_filtertiprack_200ul", 2)
-    tiprack1 = protocol.load_labware("opentrons_96_filtertiprack_200ul", 1)
-    tiprack4 = protocol.load_labware("opentrons_96_filtertiprack_200ul", 4)
-    tiprack7 = protocol.load_labware("opentrons_96_filtertiprack_200ul", 7)
-    tiprack8 = protocol.load_labware("opentrons_96_filtertiprack_200ul", 8)
-    tiprack10 = protocol.load_labware("opentrons_96_filtertiprack_200ul", 10)
+    tiprack2 = protocol.load_labware("opentrons_96_tiprack_300ul", 2)
+    tiprack1 = protocol.load_labware("opentrons_96_tiprack_300ul", 1)
+    tiprack4 = protocol.load_labware("opentrons_96_tiprack_300ul", 4)
+    tiprack7 = protocol.load_labware("opentrons_96_tiprack_300ul", 7)
+    tiprack8 = protocol.load_labware("opentrons_96_tiprack_300ul", 8)
+    tiprack10 = protocol.load_labware("opentrons_96_tiprack_300ul", 10)
 
     tipracks = [tiprack10, tiprack8, tiprack7, tiprack4, tiprack1, tiprack2]
     availableTips = []
@@ -78,7 +78,7 @@ def run(protocol: protocol_api.ProtocolContext):
     generalHeight=5 # Used always except when mixing beads in reservoir - Beads are extracted from From well bottom (mm)
     beadsHeight=10 # Used when mixing beads in reservoir - From well bottom (mm). When mixing beads in the reagent well - Maybe I should modify this and make it depend on runColumns
 
-        #Incubation times - Minutes
+        #Incubation times - seconds
     incubationProteinase = 10
     incubationBeadsNoMagnet = 5 # After adding the beads, we incubate them for 5 min without magnet.
     incubationBeadsMagnet = 5
@@ -101,7 +101,7 @@ def run(protocol: protocol_api.ProtocolContext):
     WBE = reagents["A3"]
     ethanol1 = reagents["A4"]
     ethanol2 = reagents["A5"]
-    water = reagents["A12"]
+    water = reagents["A6"]
     #########################################################################################################
     ##           Use these formulae to identify how much volume you need based on number of columns        ##
     ##           Each reservoir well has dimensions W=8.20, L=127.76, H=31.40. To make sure there is       ##
@@ -153,8 +153,8 @@ def run(protocol: protocol_api.ProtocolContext):
         This function takes the duration of the incubation and outputs a message every minute to keep track of the time more easily
         """
         while time > 0:
-            protocol.comment("Only %s minutes more! Hold in there!" % time)
-            protocol.delay(minutes=1)
+            protocol.comment("Only %s seconds more! Hold in there!" % time)
+            protocol.delay(seconds=1)
             time -= 1
 
     def remove_tip(pipette, tip):
@@ -231,7 +231,7 @@ def run(protocol: protocol_api.ProtocolContext):
             retrieve_tip(p300, currentip)
             if (mixReagent==True) and (index==0 or index==2 or index==5): #If the reagent is to be mixed, and we are in column 1, 3 or 6, mix it. We mix three times to make sure we dont have differences
                 protocol.comment("Mixing %s" % reagentName)
-                well_mix(vol=beadsMixing, loc=beads, reps=beadsMixRepeats, height=beadsHeight, moveSide=0) #We only do this with magnetic beads, that's why we use those variable names
+                well_mix(vol=beadsMixing, loc=beads, reps=beadsMixRepeats, height=beadsHeight, moveSide=moveSide) #We only do this with magnetic beads, that's why we use those variable names
                 p300.blow_out(beads.top())
             tvol = vol
             while tvol > tipVolume:
@@ -251,7 +251,7 @@ def run(protocol: protocol_api.ProtocolContext):
         if magnetTime==True:
             protocol.comment("Engaging magnet")
             magneto.engage(height=magnetHeight)
-        protocol.comment("Incubating for %s minutes" % incubationTime)
+        protocol.comment("Incubating for %s seconds" % incubationTime)
         clock(time=incubationTime)
 
     ################# GO, VASILY, GO #################
@@ -274,7 +274,7 @@ def run(protocol: protocol_api.ProtocolContext):
     slow_transfer(vol=beadsVol, reagent=beads, reagentName="Magnetic beads", incubationTime=incubationBeadsNoMagnet,
     columnID=columnID, mixReagent=True, magnetTime=False, extraVol=10)
     #INCUBATION 2: 5 min without magnet [Total: 15 min]
-    protocol.comment("Engaging magnet and keeping this incubation going for other %s minutes" % incubationBeadsMagnet)
+    protocol.comment("Engaging magnet and keeping this incubation going for other %s seconds" % incubationBeadsMagnet)
     magneto.engage(height=magnetHeight)
     clock(time=incubationBeadsMagnet)
     #INCUBATION 3: 5 min incubation with magnet [Total: 20 min]
@@ -317,7 +317,7 @@ def run(protocol: protocol_api.ProtocolContext):
     remove_supernatant(vol=washVol, wasteID="A4", reagentName="Ethanol 70% (Second time)",
     columnID=columnID)
         #INCUBATION 7: 5 min incubaton with magnet [Total: 31 min]
-    protocol.comment("This time, I do not disengage the magnet and let the beads dry for %s min" % incubationDry)
+    protocol.comment("This time, I do not disengage the magnet and let the beads dry for 5 min")
     clock(time=incubationDry)
 
         #STEP 10: Diluting samples in 80 ul of RNAse free water
@@ -330,7 +330,7 @@ def run(protocol: protocol_api.ProtocolContext):
         #INCUBATION 8: 5 min incubaton WITHOUT magnet [Total: 36 min]
     protocol.comment("Engaging magnet now!")
     magneto.engage(height=magnetHeight)
-    protocol.delay(minutes=incubationWaterMagnet)
+    protocol.delay(seconds=incubationWaterMagnet)
         #INCUBATION 9: 1 min incubaton WITH magnet [Total: 37 min]
 
         #STEP 11: Transfering samples to output plate
