@@ -101,7 +101,7 @@ def run(protocol: protocol_api.ProtocolContext):
     WBE = reagents["A3"]
     ethanol1 = reagents["A4"]
     ethanol2 = reagents["A5"]
-    water = reagents["A12"]
+    water = reagents["A6"]
     #########################################################################################################
     ##           Use these formulae to identify how much volume you need based on number of columns        ##
     ##           Each reservoir well has dimensions W=8.20, L=127.76, H=31.40. To make sure there is       ##
@@ -153,8 +153,8 @@ def run(protocol: protocol_api.ProtocolContext):
         This function takes the duration of the incubation and outputs a message every minute to keep track of the time more easily
         """
         while time > 0:
-            protocol.comment("Only %s minutes more! Hold in there!" % time)
             protocol.delay(minutes=1)
+            protocol.comment("Only %s minutes more! Hold in there!" % time)
             time -= 1
 
     def remove_tip(pipette, tip):
@@ -173,7 +173,7 @@ def run(protocol: protocol_api.ProtocolContext):
     def well_mix(vol, loc, reps, height=generalHeight, moveSide=0):
         """
         Aspirates <vol> from bottom of well and dispenses it from <height> <reps> times
-        loc1 is a position at 0.6mm over the bottom of the well
+        loc1 is a position at 0.3mm over the bottom of the well
         loc2 is a position in the same x and y posiiton than loc1, but at <height>mm over the bottom of the well
         The idea here is to take liquid to the very bottom and pour it from a higher point, to mix things
         """
@@ -289,7 +289,6 @@ def run(protocol: protocol_api.ProtocolContext):
     slow_transfer(vol= washVol, reagent=WBE, reagentName="WBE", incubationTime=incubationWash,
     columnID=columnID)
         #INCUBATION 4: 3 min incubaton with magnet [Total: 23 min]
-
 
         #STEP 5: Removing WBE Supernatant
     remove_supernatant(vol= washVol, wasteID="A2", reagentName="WBE",
