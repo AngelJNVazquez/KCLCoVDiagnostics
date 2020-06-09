@@ -58,7 +58,7 @@ def run(protocol: protocol_api.ProtocolContext):
     #I am using this dictionary method because it makes it easier to modify later the script for 96 samples/
 
         #Pipettes
-    p300 = protocol.load_instrument( "p300_multi", "left")
+    p300 = protocol.load_instrument( "p300_multi_gen2", "left")
 
     ################### SETTING UP ###################
     ##                                              ##
@@ -75,8 +75,8 @@ def run(protocol: protocol_api.ProtocolContext):
         #Mixing settings
     washMixing=100 # volume (ul)
     waterMixing=25 # volume (ul)
-    generalHeight=5 # Used always except when mixing beads in reservoir - Beads are extracted from From well bottom (mm)
-    beadsHeight=10 # Used when mixing beads in reservoir - From well bottom (mm). When mixing beads in the reagent well - Maybe I should modify this and make it depend on runColumns
+    generalHeight=5 # Used always except when mixing beads in reservoir - Units relative to well bottom (mm)
+    beadsHeight=10 # Used when mixing beads in reservoir - Units relative to well bottom (mm). When mixing beads in the reagent well - Maybe I should modify this and make it depend on runColumns
 
         #Incubation times - Minutes
     incubationProteinase = 10
@@ -178,7 +178,7 @@ def run(protocol: protocol_api.ProtocolContext):
         The idea here is to take liquid to the very bottom and pour it from a higher point, to mix things
         """
         p300.flow_rate.aspirate = 100
-        loc1 = loc.bottom().move(types.Point(x=0+moveSide, y=0, z=0.3))
+        loc1 = loc.bottom().move(types.Point(x=0+moveSide, y=0, z=0.2))
         loc2 = loc.bottom().move(types.Point(x=0+moveSide, y=0, z=height))
         for _ in range(reps):
             p300.aspirate(vol, loc1)
@@ -341,7 +341,7 @@ def run(protocol: protocol_api.ProtocolContext):
         to = outplate[ID]
 
         p300.dispense(20, src.top() )
-        p300.transfer(dilutionVol, src.bottom().move(types.Point(x=-1, y=0, z=0.3)),
+        p300.transfer(dilutionVol, src.bottom().move(types.Point(x=-1, y=0, z=0.2)),
         to.bottom(0.3), new_tip="never")
         protocol.delay(seconds=2)
         p300.dispense(20)
