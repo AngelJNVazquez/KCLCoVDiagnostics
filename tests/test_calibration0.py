@@ -51,15 +51,9 @@ def run(protocol: protocol_api.ProtocolContext):
     moveSide = 0
 
     def getMixingTopHeight(stringLabware, volume):
-        labwareDefinition = protocol_api.labware.get_labware_definition(stringLabware)
-        shape = labwareDefinition["wells"]["A1"]["shape"]
-        if shape=="circular":
-            diameter = labwareDefinition["wells"]["A1"]["diameter"]
-            height = (math.pi*diameter**2)/volume
-        else:
-            width = labwareDefinition["wells"]["A1"]["xDimension"]
-            length = labwareDefinition["wells"]["A1"]["yDimension"]
-            height = volume/(width*length)
+        labwareDefinition = protocol_api.labware.get_all_labware_definitions()
+        for thing in labwareDefinition:
+            protocol.comment(thing)
 
     def well_mix(vol, loc, reps, labwareName="eppendorf_96_deepwell_2ml", height=generalHeight, moveSide=0, bottomHeight = bottomMixHeight):
         """
@@ -70,7 +64,7 @@ def run(protocol: protocol_api.ProtocolContext):
         """
         p300.flow_rate.aspirate = 100
         p300.flow_rate.dispense = 300
-        height = getMixingTopHeight(labwareName, vol)
+        getMixingTopHeight(labwareName, vol)
         loc1 = loc.bottom().move(types.Point(x=0+moveSide, y=0, z=bottomHeight))
         loc2 = loc.bottom().move(types.Point(x=0+moveSide, y=0, z=height))
         for _ in range(reps):
